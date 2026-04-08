@@ -7,6 +7,7 @@ from skills.search import search_web, search_youtube, open_website
 from skills.news import get_full_briefing, get_gaming_news, get_ai_news, get_world_news
 from skills.tasks import add_task, get_tasks, complete_task, clear_tasks
 import re
+import subprocess
 
 def extract_number(text):
     numbers = re.findall(r'\d+', text)
@@ -42,8 +43,42 @@ def handle_command(user_input):
         app = text.replace("open", "").strip()
         return open_app(app)
     elif "close" in text and any(app in text for app in ["steam", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]):
-        app = text.replace("close", "").strip()
-        return close_app(app)
+        for app in ["steam", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]:
+            if app in text:
+                return close_app(app)
+            
+            
+    # --- SPOTIFY ---
+    elif "spotify" in text and any(word in text for word in ["play", "resume", "start"]) and "open" not in text:
+        song = text
+        for word in ["play", "the", "song", "on", "spotify", "can", "you", "please", "for", "me"]:
+            song = song.replace(word, "")
+        song = song.strip()
+        import pyautogui, time, subprocess
+        if song:
+            # Search and play specific song
+            subprocess.Popen(r"C:\Users\Harsh\AppData\Local\Microsoft\WindowsApps\Spotify.exe", shell=True)
+            time.sleep(3)
+            pyautogui.hotkey('ctrl', 'l')
+            time.sleep(0.5)
+            pyautogui.typewrite(song, interval=0.05)
+            pyautogui.press('enter')
+            return f"Searching and playing {song} on Spotify!"
+        else:
+            pyautogui.hotkey('space')
+            return "Playing music on Spotify!"
+    elif "pause music" in text or ("pause" in text and "spotify" in text) or "stop music" in text:
+        import pyautogui
+        pyautogui.hotkey('space')
+        return "Music paused!"
+    elif "next song" in text or "skip song" in text or "next track" in text:
+        import pyautogui
+        pyautogui.hotkey('ctrl', 'right')
+        return "Skipping to next song!"
+    elif "previous song" in text or "last song" in text or "previous track" in text:
+        import pyautogui
+        pyautogui.hotkey('ctrl', 'left')
+        return "Going to previous song!"
 
     # --- SYSTEM ---
     elif "set volume" in text or "volume to" in text:
