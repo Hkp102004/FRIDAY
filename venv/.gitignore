@@ -1,0 +1,10 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+
+venv/
+__pycache__/
+*.mp3
+.env
+voices/
+*.onnx
+*.onnx.json
+temp_speech.mp3
