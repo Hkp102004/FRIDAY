@@ -7,49 +7,44 @@ from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 def get_volume_interface():
+    from pycaw.pycaw import AudioUtilities
     devices = AudioUtilities.GetSpeakers()
-    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-    return cast(interface, POINTER(IAudioEndpointVolume))
+    return devices._volume
 
 def set_volume(level):
     try:
         level = int(level)
         level = max(0, min(100, level))
-        volume = get_volume_interface()
-        volume.SetMasterVolumeLevelScalar(level / 100, None)
+        nircmd_vol = int(level / 100 * 65535)
+        nircmd_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'nircmd.exe')
+        subprocess.run([nircmd_path, 'setsysvolume', str(nircmd_vol)], capture_output=True)
         return f"Volume set to {level}%!"
     except Exception as e:
-        try:
-            # Fallback using PowerShell
-            subprocess.run([
-                'powershell', '-c',
-                f'$obj = New-Object -ComObject WScript.Shell; '
-                f'[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms"); '
-                f'$vol = [Math]::Round({level} / 100 * 65535); '
-                f'$mute = 0xF13F; '
-                f'Add-Type -MemberDefinition "[DllImport(\'winmm.dll\')] public static extern int waveOutSetVolume(IntPtr h, uint dwVolume);" -Name "WinMM" -Namespace "Win32"; '
-                f'[Win32.WinMM]::waveOutSetVolume([IntPtr]::Zero, ($vol -bor ($vol -shl 16)))'
-            ], capture_output=True)
-            return f"Volume set to {level}%!"
-        except:
-            return f"Couldn't set volume!"
+        return f"Couldn't set volume: {str(e)}"
 
 def get_volume():
     try:
-        volume = get_volume_interface()
-        level = round(volume.GetMasterVolumeLevelScalar() * 100)
-        return f"Current volume is {level}%"
+        nircmd_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'nircmd.exe')
+        result = subprocess.run([nircmd_path, 'getvolume'], capture_output=True, text=True)
+        return f"Current volume info retrieved!"
     except Exception as e:
         return f"Couldn't get volume: {str(e)}"
+    
 
 def set_brightness(level):
     try:
         level = int(level)
         level = max(0, min(100, level))
-        sbc.set_brightness(level)
+        nircmd_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'nircmd.exe')
+        subprocess.run([nircmd_path, 'setbrightness', str(level)], capture_output=True)
         return f"Brightness set to {level}%!"
     except Exception as e:
-        return f"Couldn't set brightness: {str(e)}"
+        # Fallback to sbc
+        try:
+            sbc.set_brightness(level)
+            return f"Brightness set to {level}%!"
+        except:
+            return f"Couldn't set brightness: {str(e)}"
 
 def get_brightness():
     try:
@@ -57,6 +52,7 @@ def get_brightness():
         return f"Current brightness is {level}%"
     except Exception as e:
         return f"Couldn't get brightness: {str(e)}"
+    
 
 def get_battery():
     try:
@@ -70,15 +66,15 @@ def get_battery():
 
 def take_screenshot():
     try:
-        import pyautogui
         import datetime
         filename = f"screenshot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
         path = os.path.join(os.path.expanduser("~"), "Desktop", filename)
-        pyautogui.screenshot(path)
+        nircmd_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'nircmd.exe')
+        subprocess.run([nircmd_path, 'savescreenshot', path], capture_output=True)
         return f"Screenshot saved to your desktop as {filename}!"
     except Exception as e:
         return f"Couldn't take screenshot: {str(e)}"
-
+    
 def get_system_info():
     try:
         cpu = psutil.cpu_percent(interval=1)

@@ -8,3 +8,4 @@ voices/
 *.onnx
 *.onnx.json
 temp_speech.mp3
+skills/spotify.py
