@@ -6,7 +6,7 @@ from skills.system import set_volume, get_volume, set_brightness, get_brightness
 from skills.search import search_web, search_youtube, open_website
 from skills.news import get_full_briefing, get_gaming_news, get_ai_news, get_world_news
 from skills.tasks import add_task, get_tasks, complete_task, clear_tasks
-from skills.spotify import play_song, pause_music, next_song, previous_song, toggle_playback
+from skills.spotify import play_song, pause_music, next_song, previous_song, toggle_playback, get_current_song
 import re
 import subprocess
 
@@ -47,6 +47,8 @@ def handle_command(user_input):
         for app in ["steam", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]:
             if app in text:
                 return close_app(app)
+            else : return chat(user_input)
+        return "Which app do you want me to close?"
             
             
     # --- SPOTIFY ---
@@ -72,6 +74,9 @@ def handle_command(user_input):
 
     elif "previous song" in text or "last song" in text or "previous track" in text or "go back" in text:
         return previous_song()
+    
+    elif "what song" in text or "current song" in text or "what's playing" in text:
+        return get_current_song()
 
     # --- SYSTEM ---
     elif "set volume" in text or "volume to" in text:
@@ -121,7 +126,7 @@ def handle_command(user_input):
         return chat(user_input)
 
 def run_ada():
-    speak("Hello Harsh! Ada is online and ready. How can I help you today?")
+    speak("Hello Boss! Ada is online and ready. How can I help you today?")
 
     while True:
         user_input = listen()
