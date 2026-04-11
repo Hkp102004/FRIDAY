@@ -129,3 +129,53 @@ def set_spotify_volume(level):
         return f"Spotify volume set to {level}%!"
     except Exception as e:
         return f"Couldn't set volume: {str(e)}"
+    
+def play_playlist(playlist_name):
+    try:
+        ensure_spotify_running()
+        time.sleep(1)
+        sp = get_spotify()
+        device_id = get_active_device(sp)
+        
+        # Search for playlist
+        results = sp.search(q=playlist_name, type='playlist', limit=1)
+        playlists = results['playlists']['items']
+        
+        if playlists:
+            playlist = playlists[0]
+            sp.start_playback(device_id=device_id, context_uri=playlist['uri'])
+            return f"Playing playlist {playlist['name']}!"
+        return f"Couldn't find playlist {playlist_name}!"
+    except Exception as e:
+        return f"Couldn't play playlist: {str(e)}"
+
+def play_my_playlist(playlist_name):
+    try:
+        ensure_spotify_running()
+        time.sleep(1)
+        sp = get_spotify()
+        device_id = get_active_device(sp)
+        
+        # Get user's own playlists
+        playlists = sp.current_user_playlists(limit=50)
+        
+        for playlist in playlists['items']:
+            if playlist_name.lower() in playlist['name'].lower():
+                sp.start_playback(device_id=device_id, context_uri=playlist['uri'])
+                return f"Playing your playlist {playlist['name']}!"
+        
+        # If not found in own playlists search globally
+        return play_playlist(playlist_name)
+    except Exception as e:
+        return f"Couldn't play playlist: {str(e)}"
+
+def get_my_playlists():
+    try:
+        sp = get_spotify()
+        playlists = sp.current_user_playlists(limit=20)
+        if playlists['items']:
+            names = [p['name'] for p in playlists['items']]
+            return "Your playlists: " + ", ".join(names)
+        return "No playlists found!"
+    except Exception as e:
+        return f"Couldn't get playlists: {str(e)}"

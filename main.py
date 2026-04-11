@@ -6,7 +6,7 @@ from skills.system import set_volume, get_volume, set_brightness, get_brightness
 from skills.search import search_web, search_youtube, open_website
 from skills.news import get_full_briefing, get_gaming_news, get_ai_news, get_world_news
 from skills.tasks import add_task, get_tasks, complete_task, clear_tasks
-from skills.spotify import play_song, pause_music, next_song, previous_song, toggle_playback, get_current_song
+from skills.spotify import play_song, pause_music, next_song, previous_song, toggle_playback, get_current_song, play_playlist, play_my_playlist, get_my_playlists
 import re
 import subprocess
 
@@ -80,6 +80,12 @@ def handle_command(user_input):
             return toggle_playback()
         else:
             return play_song(song)
+    
+    elif "my playlists" in text or "show playlists" in text or "list playlists" in text:
+        return get_my_playlists()
+    elif ("play playlist" in text or "play my playlist" in text) and "open" not in text:
+        playlist = text.replace("play my playlist", "").replace("play playlist", "").replace("can you", "").replace("please", "").strip()
+        return play_my_playlist(playlist)
 
     # --- SYSTEM ---
     elif "set volume" in text or "volume to" in text:
