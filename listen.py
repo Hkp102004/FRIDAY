@@ -8,12 +8,11 @@ from faster_whisper import WhisperModel
 
 # Load whisper model once (tiny is fastest, base is more accurate)
 print("Loading Whisper model...")
-model = WhisperModel("base", device="cpu", compute_type="int8")
+model = WhisperModel("small", device="cpu", compute_type="int8")
 print("Whisper ready!")
 
 def listen():
     print("ADA: Listening...")
-    
     duration = 7
     sample_rate = 16000
     

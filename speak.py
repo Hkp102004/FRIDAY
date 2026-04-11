@@ -8,7 +8,7 @@ VOICE = "en-HK-YanNeural" # Closest to Friday/EDITH voice
 
 async def speak_async(text):
     tmp_file = tempfile.mktemp(suffix=".mp3")
-    communicate = edge_tts.Communicate(text, VOICE, rate="+10%", volume="+0%")
+    communicate = edge_tts.Communicate(text, VOICE, rate="+5%")
     await communicate.save(tmp_file)
     playsound(tmp_file)
     try:
