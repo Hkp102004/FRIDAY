@@ -14,6 +14,22 @@ def extract_number(text):
     numbers = re.findall(r'\d+', text)
     return numbers[0] if numbers else None
 
+def extract_song(text):
+    song = text
+    # Remove trigger phrases in order (longest first to avoid partial matches)
+    for phrase in [
+        "play the song called", "play the song", "play song called",
+        "play song", "play the track", "play track", "on spotify",
+        "from spotify", "can you", "please", "for me", "resume music",
+        "start music", "put on", "i want to hear", "i want to listen to"
+    ]:
+        song = song.replace(phrase, "")
+    # Remove "play" only if at start
+    song = song.strip()
+    if song.startswith("play "):
+        song = song[5:]
+    return song.strip()
+
 def handle_command(user_input):
     text = user_input.lower()
 
@@ -47,36 +63,23 @@ def handle_command(user_input):
         for app in ["steam", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]:
             if app in text:
                 return close_app(app)
-            else : return chat(user_input)
         return "Which app do you want me to close?"
-            
-            
-    # --- SPOTIFY ---
-    # Play song (with or without "spotify" keyword)
-    elif ("play" in text or "resume" in text or "start music" in text or "resume song" in text or "play song" in text or "play music" in text) and "open" not in text and "youtube" not in text:
-        # Extract song name - remove common words
-        song = text
-        for phrase in ["play the song", "play song", "play the", "play", "on spotify", "from spotify", "can you", "please", "for me", "resume", "start music"]:
-            song = song.replace(phrase, "")
-        song = song.strip()
 
-        # If it's just "play" or "resume" without a song name, toggle playback
-        if not song or song in ["", "music", "it"]:
+    # --- SPOTIFY ---
+    elif "what song" in text or "current song" in text or "what's playing" in text or "whats playing" in text:
+        return get_current_song()
+    elif "pause" in text or "stop music" in text:
+        return pause_music()
+    elif "next song" in text or "skip song" in text or "next track" in text or "skip" in text:
+        return next_song()
+    elif "previous song" in text or "last song" in text or "previous track" in text or "go back" in text:
+        return previous_song()
+    elif ("play" in text or "resume" in text or "start music" in text) and "open" not in text and "youtube" not in text:
+        song = extract_song(text)
+        if not song or song in ["", "music", "it", "the song", "a song"]:
             return toggle_playback()
         else:
             return play_song(song)
-
-    elif "pause music" in text or "pause" in text or "stop music" in text:
-        return pause_music()
-
-    elif "next song" in text or "skip song" in text or "next track" in text or "skip" in text:
-        return next_song()
-
-    elif "previous song" in text or "last song" in text or "previous track" in text or "go back" in text:
-        return previous_song()
-    
-    elif "what song" in text or "current song" in text or "what's playing" in text:
-        return get_current_song()
 
     # --- SYSTEM ---
     elif "set volume" in text or "volume to" in text:
@@ -126,7 +129,7 @@ def handle_command(user_input):
         return chat(user_input)
 
 def run_ada():
-    speak("Hello Boss! Ada is online and ready. How can I help you today?")
+    speak("Hello Boss! Ada is online and ready, How can I help you today?")
 
     while True:
         user_input = listen()
@@ -138,12 +141,13 @@ def run_ada():
 
         # Exit commands
         if any(word in user_input for word in ["goodbye ada", "bye ada", "shutdown ada", "turn off ada"]):
-            speak("Goodbye Harsh! Have a great day!")
+            speak("Goodbye Boss! Have a great day!")
             break
 
         # Handle command or chat
         response = handle_command(user_input)
-        speak(response)
+        if response:
+            speak(response)
 
 if __name__ == "__main__":
     run_ada()
