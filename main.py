@@ -134,26 +134,59 @@ def handle_command(user_input):
     else:
         return chat(user_input)
 
+# def run_ada():
+#     speak("Hello Boss! Ada is online and ready, How can I help you today?")
+
+#     while True:
+#         user_input = listen()
+
+#         if user_input is None:
+#             continue
+
+#         print(f"You: {user_input}")
+
+#         # Exit commands
+#         if any(word in user_input for word in ["goodbye ada", "bye ada", "shutdown ada", "turn off ada"]):
+#             speak("Goodbye Boss! Have a great day!")
+#             break
+
+#         # Handle command or chat
+#         response = handle_command(user_input)
+#         if response:
+#             speak(response)
+
+# if __name__ == "__main__":
+#     run_ada()
+
 def run_ada():
-    speak("Hello Boss! Ada is online and ready, How can I help you today?")
-
+    from wakeword import listen_for_wakeword
+    
+    speak("Ada is running in the background. Say 'Ada' to wake me up!")
+    
     while True:
+        print("Ada: Sleeping... say 'Ada' to wake me up!")
+        
+        # Wait for wake word
+        listen_for_wakeword()
+        
+        # Wake up!
+        speak("Yes Boss?")
+        
+        # Listen for command
         user_input = listen()
-
+        
         if user_input is None:
+            speak("I didn't catch that!")
             continue
 
         print(f"You: {user_input}")
 
-        # Exit commands
         if any(word in user_input for word in ["goodbye ada", "bye ada", "shutdown ada", "turn off ada"]):
             speak("Goodbye Boss! Have a great day!")
             break
 
-        # Handle command or chat
         response = handle_command(user_input)
         if response:
             speak(response)
-
 if __name__ == "__main__":
     run_ada()

@@ -8,3 +8,4 @@ voices/
 *.onnx.json
 temp_speech.mp3
 .spotify_cache
+wakeword_samples\ada
