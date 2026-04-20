@@ -10,15 +10,15 @@ from faster_whisper import WhisperModel
 # ── Shared model (tiny = fast enough for wake word detection) ──────────────
 print("Loading wake word model...")
 model = WhisperModel("tiny", device="cpu", compute_type="int8")
-print("Wake word ready! Say 'Ada' to wake her up!")
+print("Wake word ready! Say 'FRIDAY' to wake her up!")
 
 SAMPLE_RATE = 16000
 CHUNK_DURATION = 2  # shorter chunks = less deaf gap
 
 WAKE_WORDS = [
-    "ada", "hey ada", "hello ada", "hello aada",
-    "eda", "aida", "hada", "haina", "aada", "adda", "ada baby",
-    "dah", "nada"
+    "Friday","friday","hey there","hey friday","wake up friday", "ok friday",
+    "hello there","friday wake up","friday wakeup", "time for work","time for work friday",
+    "alright daddy's home", "let's get to work friday"
 ]
 
 # ── Audio chunk queue ──────────────────────────────────────────────────────
@@ -88,6 +88,6 @@ def listen_for_wakeword():
 
 
 if __name__ == "__main__":
-    print("Listening for 'Ada'...")
+    print("Listening for 'FRIDAY'...")
     if listen_for_wakeword():
         print("Wake word detected!")

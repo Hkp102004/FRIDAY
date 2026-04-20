@@ -59,7 +59,7 @@ def _record_until_silence() -> np.ndarray:
 
 
 def listen():
-    print("ADA: Listening...")
+    print("FRIDAY: Listening...")
 
     audio_data = _record_until_silence()
 
@@ -77,7 +77,7 @@ def listen():
             beam_size=5,
             vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=500),
-            initial_prompt="Commands for AI assistant Ada. User says things like: open spotify, play music, set volume, search for, what is the weather.",
+            initial_prompt="Commands for AI assistant FRIDAY. User says things like: open spotify, play music, set volume, search for, what is the weather.",
             condition_on_previous_text=False,
             no_speech_threshold=0.6,
             log_prob_threshold=-1.0

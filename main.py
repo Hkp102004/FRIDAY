@@ -135,14 +135,14 @@ def handle_command(user_input):
         return chat(user_input)
 
 
-def run_ada():
+def run_friday():
     from wakeword import listen_for_wakeword
 
-    speak("Ada is running in the background. Say 'Ada' to wake me up!")
+    speak("Friday is running in the background. Say 'Friday' to wake me up!")
 
     while True:
         try:
-            print("Ada: Sleeping... say 'Ada' to wake me up!")
+            print("Friday: Sleeping... say 'Friday  ' to wake me up!")
 
             # Wait for wake word
             listen_for_wakeword()
@@ -184,4 +184,4 @@ def run_ada():
 
 
 if __name__ == "__main__":
-    run_ada()
+    run_friday()
