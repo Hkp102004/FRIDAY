@@ -17,8 +17,8 @@ async def speak_async(text):
         pass
 
 def speak(text):
-    print(f"Ada: {text}")
+    print(f"FRIDAY: {text}")
     asyncio.run(speak_async(text))
 
 if __name__ == "__main__":
-    speak("Hello Hekey! I'm Ada, your personal assistant. How can I help you today?")
+    speak("Hello Hekey! I'm Friday, your personal assistant. How can I help you today?")

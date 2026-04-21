@@ -9,6 +9,7 @@ from skills.tasks import add_task, get_tasks, complete_task, clear_tasks
 from skills.spotify import play_song, pause_music, next_song, previous_song, toggle_playback, get_current_song, play_playlist, play_my_playlist, get_my_playlists
 import re
 import subprocess
+import time
 
 def extract_number(text):
     numbers = re.findall(r'\d+', text)
@@ -16,16 +17,14 @@ def extract_number(text):
 
 def extract_song(text):
     song = text
-    # Remove trigger phrases in order (longest first to avoid partial matches)
     for phrase in [
-    "play the song called", "play the song", "play song called",
-    "play song", "play the track", "play track", "on spotify",
-    "from spotify", "can you", "please", "for me", "resume music",
-    "resume the song", "resume song", "resume",
-    "start music", "put on", "i want to hear", "i want to listen to"
+        "play the song called", "play the song", "play song called",
+        "play song", "play the track", "play track", "on spotify",
+        "from spotify", "can you", "please", "for me", "resume music",
+        "resume the song", "resume song", "resume",
+        "start music", "put on", "i want to hear", "i want to listen to"
     ]:
         song = song.replace(phrase, "")
-    # Remove "play" only if at start
     song = song.strip()
     if song.startswith("play "):
         song = song[5:]
@@ -81,7 +80,7 @@ def handle_command(user_input):
             return toggle_playback()
         else:
             return play_song(song)
-    
+
     elif "my playlists" in text or "show playlists" in text or "list playlists" in text:
         return get_my_playlists()
     elif ("play playlist" in text or "play my playlist" in text) and "open" not in text:
@@ -135,59 +134,54 @@ def handle_command(user_input):
     else:
         return chat(user_input)
 
-# def run_ada():
-#     speak("Hello Boss! Ada is online and ready, How can I help you today?")
 
-#     while True:
-#         user_input = listen()
-
-#         if user_input is None:
-#             continue
-
-#         print(f"You: {user_input}")
-
-#         # Exit commands
-#         if any(word in user_input for word in ["goodbye ada", "bye ada", "shutdown ada", "turn off ada"]):
-#             speak("Goodbye Boss! Have a great day!")
-#             break
-
-#         # Handle command or chat
-#         response = handle_command(user_input)
-#         if response:
-#             speak(response)
-
-# if __name__ == "__main__":
-#     run_ada()
-
-def run_ada():
+def run_friday():
     from wakeword import listen_for_wakeword
-    
-    speak("Ada is running in the background. Say 'Ada' to wake me up!")
-    
+
+    speak("Friday is running in the background. Say 'Friday' to wake me up!")
+
     while True:
-        print("Ada: Sleeping... say 'Ada' to wake me up!")
-        
-        # Wait for wake word
-        listen_for_wakeword()
-        
-        # Wake up!
-        speak("Yes Boss?")
-        
-        # Listen for command
-        user_input = listen()
-        
-        if user_input is None:
-            speak("I didn't catch that!")
+        try:
+            print("Friday: Sleeping... say 'Friday  ' to wake me up!")
+
+            # Wait for wake word
+            listen_for_wakeword()
+
+            # Wake up!
+            speak("Yes Boss?")
+
+            # Listen for command
+            user_input = listen()
+
+            if user_input is None:
+                speak("I didn't catch that!")
+                # Cooldown so mic doesn't immediately re-trigger on room noise
+                time.sleep(1)
+                continue
+
+            print(f"You: {user_input}")
+
+            # Exit commands
+            if any(word in user_input for word in ["goodbye friday", "bye friday", "shutdown friday", "turn off friday"]):
+                speak("Goodbye Boss! Have a great day!")
+                break
+
+            # Handle the command
+            response = handle_command(user_input)
+            if response:
+                speak(response)
+
+            # ── Cooldown after speaking ────────────────────────────────────
+            # Prevents Ada's own voice or app audio (e.g. Spotify starting up)
+            # from being picked up as the next wake word trigger.
+            time.sleep(2)
+
+        except Exception as e:
+            # If anything crashes, log it and keep running — never die
+            print(f"[Error] Something went wrong: {e}")
+            time.sleep(1)
             continue
 
-        print(f"You: {user_input}")
 
-        if any(word in user_input for word in ["goodbye ada", "bye ada", "shutdown ada", "turn off ada"]):
-            speak("Goodbye Boss! Have a great day!")
-            break
-
-        response = handle_command(user_input)
-        if response:
-            speak(response)
 if __name__ == "__main__":
-    run_ada()
+    run_friday()
