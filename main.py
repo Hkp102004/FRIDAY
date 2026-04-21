@@ -162,7 +162,7 @@ def run_friday():
             print(f"You: {user_input}")
 
             # Exit commands
-            if any(word in user_input for word in ["goodbye ada", "bye ada", "shutdown ada", "turn off ada"]):
+            if any(word in user_input for word in ["goodbye friday", "bye friday", "shutdown friday", "turn off friday"]):
                 speak("Goodbye Boss! Have a great day!")
                 break
 
