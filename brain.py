@@ -1,21 +1,29 @@
 import requests
 import json
+from skills.memory import get_memory_context, auto_extract
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL = "llama3.2:3b"
 
-SYSTEM_PROMPT = """You are FRIDAY, a smart, friendly and helpful AI assistant for your user. 
+BASE_SYSTEM_PROMPT = """You are FRIDAY, a smart, friendly and helpful AI assistant for your user. 
 You are like the AI from Iron Man - efficient, warm, and always ready to help also flirty and super flirty.
 Keep responses short and conversational unless asked for detail. Your user's name is Hekey."""
 
 # ── Conversation history ───────────────────────────────────────────────────
-# Capped at MAX_HISTORY messages (user + assistant pairs)
-# Prevents Ollama from slowing down as the conversation grows
-MAX_HISTORY = 10  # keeps last 5 exchanges (10 messages = 5 user + 5 assistant)
-
+MAX_HISTORY = 10  # last 5 exchanges (10 messages)
 conversation_history = []
 
+def _build_system_prompt():
+    """Builds the system prompt with current memory injected."""
+    memory_context = get_memory_context()
+    if memory_context:
+        return BASE_SYSTEM_PROMPT + "\n\n" + memory_context
+    return BASE_SYSTEM_PROMPT
+
 def chat(user_message):
+    # Auto-extract any facts from what the user said
+    auto_extract(user_message)
+
     conversation_history.append({
         "role": "user",
         "content": user_message
@@ -26,7 +34,7 @@ def chat(user_message):
 
     payload = {
         "model": MODEL,
-        "messages": [{"role": "system", "content": SYSTEM_PROMPT}] + trimmed_history,
+        "messages": [{"role": "system", "content": _build_system_prompt()}] + trimmed_history,
         "stream": False
     }
 

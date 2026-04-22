@@ -6,6 +6,7 @@ from skills.system import set_volume, get_volume, set_brightness, get_brightness
 from skills.search import search_web, search_youtube, open_website
 from skills.news import get_full_briefing, get_gaming_news, get_ai_news, get_world_news
 from skills.tasks import add_task, get_tasks, complete_task, clear_tasks
+from skills.memory import remember, forget, get_memories, clear_memories
 from skills.spotify import play_song, pause_music, next_song, previous_song, toggle_playback, get_current_song, play_playlist, play_my_playlist, get_my_playlists
 import re
 import subprocess
@@ -162,6 +163,18 @@ def handle_command(user_input):
     elif "open website" in text or "go to" in text:
         url = text.replace("open website", "").replace("go to", "").strip()
         return open_website(url)
+
+    # --- MEMORY ---
+    elif "remember that" in text or "remember this" in text:
+        fact = text.replace("remember that", "").replace("remember this", "").replace("friday", "").strip()
+        return remember(fact)
+    elif "what do you remember" in text or "what do you know about me" in text or "your memory" in text:
+        return get_memories()
+    elif "forget that" in text or "forget about" in text:
+        fact = text.replace("forget that", "").replace("forget about", "").replace("friday", "").strip()
+        return forget(fact)
+    elif "clear your memory" in text or "clear memory" in text:
+        return clear_memories()
 
     # --- FALLBACK TO BRAIN ---
     else:
