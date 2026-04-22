@@ -100,12 +100,44 @@ def play_song(song_name):
         time.sleep(1)
         sp = get_spotify()
         device_id = get_active_device(sp)
-        results = sp.search(q=f"track:{song_name}", type='track', limit=1)
-        tracks = results['tracks']['items']
+
+        # Clean up common Whisper noise before searching
+        noise_phrases = [
+            "on spotify", "from spotify", "please", "can you",
+            "for me", "by the way", "actually", "just"
+        ]
+        clean_name = song_name.lower()
+        for phrase in noise_phrases:
+            clean_name = clean_name.replace(phrase, "")
+        clean_name = clean_name.strip()
+
+        # If "by" is in the name, split into track + artist for better results
+        # e.g. "shape of you by ed sheeran" -> track:shape of you artist:ed sheeran
+        if " by " in clean_name:
+            parts = clean_name.split(" by ", 1)
+            query = f"track:{parts[0].strip()} artist:{parts[1].strip()}"
+        else:
+            # Use a loose search (no track: filter) — more forgiving of
+            # slight Whisper transcription differences
+            query = clean_name
+
+        # Try up to 3 results and pick the best match
+        results = sp.search(q=query, type="track", limit=3)
+        tracks = results["tracks"]["items"]
+
         if tracks:
             track = tracks[0]
-            sp.start_playback(device_id=device_id, uris=[track['uri']])
+            sp.start_playback(device_id=device_id, uris=[track["uri"]])
             return f"Playing {track['name']} by {track['artists'][0]['name']}!"
+
+        # Fallback: try again with just the raw name, no filters
+        results = sp.search(q=song_name, type="track", limit=1)
+        tracks = results["tracks"]["items"]
+        if tracks:
+            track = tracks[0]
+            sp.start_playback(device_id=device_id, uris=[track["uri"]])
+            return f"Playing {track['name']} by {track['artists'][0]['name']}!"
+
         return f"Couldn't find {song_name} on Spotify!"
     except Exception as e:
         return f"Couldn't play song: {str(e)}"

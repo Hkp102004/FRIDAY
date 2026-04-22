@@ -105,17 +105,20 @@ def handle_command(user_input):
         return next_song()
     elif "previous song" in text or "last song" in text or "previous track" in text or "go back" in text:
         return previous_song()
-    elif ("play" in text or "resume" in text or "start music" in text) and "open" not in text and "youtube" not in text:
-        song = extract_song(text)
-        if not song or song in ["", "music", "it", "the song", "a song", "the", "song"]:
-            return toggle_playback()
-        else:
-            return play_song(song)
+    # resume/start with no song name = always toggle, never search
+    elif ("resume" in text or "start music" in text) and "open" not in text and "youtube" not in text:
+        return toggle_playback()
     elif "my playlists" in text or "show playlists" in text or "list playlists" in text:
         return get_my_playlists()
     elif ("play playlist" in text or "play my playlist" in text) and "open" not in text:
         playlist = text.replace("play my playlist", "").replace("play playlist", "").replace("can you", "").replace("please", "").strip()
         return play_my_playlist(playlist)
+    elif "play" in text and "open" not in text and "youtube" not in text:
+        song = extract_song(text)
+        if not song or song in ["", "music", "it", "the song", "a song", "the", "song"]:
+            return toggle_playback()
+        else:
+            return play_song(song)
 
     # --- SYSTEM ---
     elif "set volume" in text or "volume to" in text:
