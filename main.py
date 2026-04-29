@@ -93,15 +93,16 @@ def handle_command(user_input):
         return get_steam_games()
     elif "refresh games" in text or "refresh steam" in text:
         return refresh_library()
-    elif any(phrase in text for phrase in ["launch", "start game", "open game", "run game", "play game"]):
-    # Strip all trigger phrases
+    elif "restart steam" in text or "reset steam" in text:
+        return restart_steam()
+    elif any(phrase in text for phrase in ["launch", "start game", "run game", "play game"]):
         game = text
-    for phrase in ["launch", "start game", "open game", "run game", "play game",
-                   "on steam", "please", "can you", "for me", "the game"]:
-        game = game.replace(phrase, "")
-    game = game.strip()
-    if game:
-        return launch_game(game)
+        for phrase in ["launch", "start game", "run game", "play game",
+                       "on steam", "please", "can you", "for me", "the game"]:
+            game = game.replace(phrase, "")
+        game = game.strip()
+        if game:
+            return launch_game(game)
     elif "restart steam" in text or "reset steam" in text:
         return restart_steam()
 
