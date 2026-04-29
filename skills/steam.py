@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import time
 
 STEAM_PATH = r"C:\Program Files (x86)\Steam"
 LIBRARY_VDF = os.path.join(STEAM_PATH, "steamapps", "libraryfolders.vdf")
@@ -132,3 +133,14 @@ if __name__ == "__main__":
     print("Steam games found:")
     for name, gid in sorted(_game_library.items()):
         print(f"  {name.title()} (ID: {gid})")
+
+
+# added a restart function for steam
+def restart_steam():
+    try:
+        subprocess.run(["taskkill", "/f", "/im", "steam.exe"], capture_output=True)
+        time.sleep(3) #waiting for steam to close
+        subprocess.Popen(r"C:\Program Files (x86)\Steam\steam.exe")
+        return "Restarting steam right now"
+    except Exception as e:
+        return f"Couldn't restart steam: {str(e)}"

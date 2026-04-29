@@ -7,7 +7,7 @@ from skills.search import search_web, search_youtube, open_website
 from skills.news import get_full_briefing, get_gaming_news, get_ai_news, get_world_news
 from skills.tasks import add_task, get_tasks, complete_task, clear_tasks
 from skills.memory import remember, forget, get_memories, clear_memories
-from skills.steam import launch_game, get_steam_games, refresh_library
+from skills.steam import launch_game, get_steam_games, refresh_library, restart_steam
 from skills.spotify import play_song, pause_music, next_song, previous_song, toggle_playback, get_current_song, play_playlist, play_my_playlist, get_my_playlists
 import re
 import subprocess
@@ -102,6 +102,8 @@ def handle_command(user_input):
     game = game.strip()
     if game:
         return launch_game(game)
+    elif "restart steam" in text or "reset steam" in text:
+        return restart_steam()
 
     # --- APPS ---
     elif "open" in text and any(app in text for app in ["steam","steamtools", "spotify", "discord", "vs code", "vscode", "opera", "brave", "github", "unity", "notepad", "calculator", "explorer", "claude"]):
