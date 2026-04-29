@@ -23,6 +23,7 @@ APPS = {
     "explorer": "explorer.exe",
     "task manager": "taskmgr.exe",
     "settings": "ms-settings:",
+    "steamtools":r"C:\Program Files\SteamTools\SteamTools.exe",
 }
 
 def open_app(app_name):

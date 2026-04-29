@@ -10,7 +10,7 @@ load_dotenv()
 
 SPOTIFY_PATH = r"C:\Users\Harsh\AppData\Local\Microsoft\WindowsApps\Spotify.exe"
 
-SCOPE = "user-modify-playback-state user-read-playback-state user-read-currently-playing"
+SCOPE = "user-modify-playback-state user-read-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative"
 
 def get_spotify():
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
@@ -187,17 +187,39 @@ def play_my_playlist(playlist_name):
         time.sleep(1)
         sp = get_spotify()
         device_id = get_active_device(sp)
-        
+
+        # Clean up whisper noise from playlist name
+        noise = ["please", "can you", "for me", "my", "the"]
+        clean_name = playlist_name.lower().strip()
+        for phrase in noise:
+            clean_name = clean_name.replace(phrase, "").strip()
+
         # Get user's own playlists
         playlists = sp.current_user_playlists(limit=50)
-        
-        for playlist in playlists['items']:
-            if playlist_name.lower() in playlist['name'].lower():
-                sp.start_playback(device_id=device_id, context_uri=playlist['uri'])
-                return f"Playing your playlist {playlist['name']}!"
-        
-        # If not found in own playlists search globally
-        return play_playlist(playlist_name)
+
+        # Filter out None items first — Spotify sometimes returns them
+        valid_playlists = [p for p in playlists['items'] if p is not None]
+
+        if not valid_playlists:
+            return "I couldn't find any playlists in your library!"
+
+        # Try to find best match
+        best_match = None
+        for playlist in valid_playlists:
+            p_name = playlist['name'].lower()
+            # Check if any word from the query matches the playlist name
+            if clean_name in p_name or any(word in p_name for word in clean_name.split()):
+                best_match = playlist
+                break
+
+        if best_match:
+            sp.start_playback(device_id=device_id, context_uri=best_match['uri'])
+            return f"Playing your playlist {best_match['name']}!"
+
+        # Fallback — search globally
+        print(f"[Spotify] '{clean_name}' not found in your playlists, searching globally...")
+        return play_playlist(clean_name)
+
     except Exception as e:
         return f"Couldn't play playlist: {str(e)}"
 

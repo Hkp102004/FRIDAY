@@ -87,25 +87,31 @@ def handle_command(user_input):
         return complete_task(task)
     elif "clear tasks" in text or "clear my list" in text:
         return clear_tasks()
-
-    # --- APPS ---
-    elif "open" in text and any(app in text for app in ["steam", "spotify", "discord", "vs code", "vscode", "opera", "brave", "github", "unity", "notepad", "calculator", "explorer", "claude"]):
-        app = text.replace("open", "").strip()
-        return open_app(app)
-    elif "close" in text and any(app in text for app in ["steam", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]):
-        for app in ["steam", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]:
-            if app in text:
-                return close_app(app)
-        return "Which app do you want me to close?"
-
+    
     # --- STEAM GAMES ---
-    elif ("launch" in text or "open" in text or "start" in text) and "game" in text:
-        game = text.replace("launch game", "").replace("open game", "").replace("start game", "").replace("launch", "").replace("open", "").replace("start", "").replace("the game", "").replace("game", "").strip()
-        return launch_game(game)
     elif "what games do i have" in text or "my steam games" in text or "list my games" in text:
         return get_steam_games()
     elif "refresh games" in text or "refresh steam" in text:
         return refresh_library()
+    elif any(phrase in text for phrase in ["launch", "start game", "open game", "run game", "play game"]):
+    # Strip all trigger phrases
+        game = text
+    for phrase in ["launch", "start game", "open game", "run game", "play game",
+                   "on steam", "please", "can you", "for me", "the game"]:
+        game = game.replace(phrase, "")
+    game = game.strip()
+    if game:
+        return launch_game(game)
+
+    # --- APPS ---
+    elif "open" in text and any(app in text for app in ["steam","steamtools", "spotify", "discord", "vs code", "vscode", "opera", "brave", "github", "unity", "notepad", "calculator", "explorer", "claude"]):
+        app = text.replace("open", "").strip()
+        return open_app(app)
+    elif "close" in text and any(app in text for app in ["steam", "steamtools", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]):
+        for app in ["steam", "steamtools", "spotify", "discord", "vs code", "opera", "brave", "github", "unity"]:
+            if app in text:
+                return close_app(app)
+        return "Which app do you want me to close?"
 
     # --- SPOTIFY ---
     elif "what song" in text or "current song" in text or "what's playing" in text or "whats playing" in text:
