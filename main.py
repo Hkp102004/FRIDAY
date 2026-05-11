@@ -87,7 +87,6 @@ def handle_command(user_input):
         return complete_task(task)
     elif "clear tasks" in text or "clear my list" in text:
         return clear_tasks()
-    
     # --- STEAM GAMES ---
     elif "what games do i have" in text or "my steam games" in text or "list my games" in text:
         return get_steam_games()
