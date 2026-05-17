@@ -9,7 +9,7 @@ from faster_whisper import WhisperModel
 
 # ── Shared model (tiny = fast enough for wake word detection) ──────────────
 print("Loading wake word model...")
-model = WhisperModel("tiny", device="cpu", compute_type="int8")
+model = WhisperModel("tiny", device="cuda", compute_type="int8")
 print("Wake word ready! Say 'FRIDAY' to wake her up!")
 
 SAMPLE_RATE = 16000

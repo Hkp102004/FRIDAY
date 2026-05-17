@@ -10,7 +10,7 @@ import os
 from faster_whisper import WhisperModel
 
 print("Loading Whisper model...")
-whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
+whisper_model = WhisperModel("small", device="cuda", compute_type="int8")
 print("Whisper ready!")
 
 # ── VAD recording settings ─────────────────────────────────────────────────
