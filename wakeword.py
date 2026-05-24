@@ -5,11 +5,8 @@ import tempfile
 import os
 import threading
 import queue
-from faster_whisper import WhisperModel
 
-# ── Shared model (tiny = fast enough for wake word detection) ──────────────
-print("Loading wake word model...")
-model = WhisperModel("tiny", device="cuda", compute_type="int8")
+from listen import whisper_model as model
 print("Wake word ready! Say 'FRIDAY' to wake her up!")
 
 SAMPLE_RATE = 16000

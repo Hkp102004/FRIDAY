@@ -2,15 +2,20 @@ import edge_tts
 import asyncio
 import tempfile
 import os
-from playsound import playsound
+import pygame
 
-VOICE = "en-HK-YanNeural" # Closest to Friday/EDITH voice
+VOICE = "en-HK-YanNeural"
+
+pygame.mixer.init()
 
 async def speak_async(text):
     tmp_file = tempfile.mktemp(suffix=".mp3")
     communicate = edge_tts.Communicate(text, VOICE, rate="+5%")
     await communicate.save(tmp_file)
-    playsound(tmp_file)
+    pygame.mixer.music.load(tmp_file)
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
     try:
         os.remove(tmp_file)
     except:
@@ -19,6 +24,3 @@ async def speak_async(text):
 def speak(text):
     print(f"FRIDAY: {text}")
     asyncio.run(speak_async(text))
-
-if __name__ == "__main__":
-    speak("Hello Hekey! I'm Friday, your personal assistant. How can I help you today?")

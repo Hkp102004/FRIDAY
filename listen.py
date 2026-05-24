@@ -10,7 +10,7 @@ import os
 from faster_whisper import WhisperModel
 
 print("Loading Whisper model...")
-whisper_model = WhisperModel("small", device="cuda", compute_type="int8")
+whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
 print("Whisper ready!")
 
 # ── VAD recording settings ─────────────────────────────────────────────────
@@ -18,7 +18,7 @@ SAMPLE_RATE      = 16000
 CHUNK_MS         = 30           # analyse silence in 30ms chunks
 SILENCE_LIMIT_S  = 1.2          # stop after this many seconds of silence
 MAX_DURATION_S   = 10           # hard cap so it never hangs
-SILENCE_THRESH   = 300          # RMS below this = silence
+SILENCE_THRESH   = 10          # RMS below this = silence
 
 
 def _is_silent(chunk: np.ndarray) -> bool:
