@@ -302,36 +302,37 @@ def _wait_for_activation(listen_for_wakeword):
     else:
         print("[Wake] Activated via wake word")
 
-
 def run_friday():
     from wakeword import listen_for_wakeword
+    from shared import start_audio_stream
 
+    # Start single mic stream — shared by wakeword and listen
+    stream = start_audio_stream()
+
+    print("[DEBUG] imports done")
+    
     speak("Friday is running in the background. Say 'Friday' or press F4 to wake me up!")
+    print("[DEBUG] speak done")
 
     while True:
         try:
+            print("[DEBUG] entering sleep loop")
             print("Friday: Sleeping... say 'Friday' or press F4 to wake me up!")
-
-            # Wait for wake word OR F4 hotkey
+            print("[DEBUG] calling _wait_for_activation")
             _wait_for_activation(listen_for_wakeword)
-
-            # Wake up and enter conversation mode
+            print("[DEBUG] activation done")
             speak("Yes Boss?")
-
-            # Stay in conversation until sleep command or timeout
+            print("[DEBUG] yes boss spoken")
             conversation_loop()
-
-            # Flush stale audio so old chunks don't instantly re-trigger
-            _flush_audio_queue()
-
-            # Small gap before re-arming wake word
-            time.sleep(1)
-
+            print("[DEBUG] conversation loop done")
         except Exception as e:
-            print(f"[Error] Something went wrong: {e}")
+            import traceback
+            traceback.print_exc()
+            print(f"[Error] {e}")
             time.sleep(1)
             continue
 
+    stream.stop()
 
 if __name__ == "__main__":
     run_friday()

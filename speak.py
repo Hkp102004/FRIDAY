@@ -3,10 +3,12 @@ import asyncio
 import tempfile
 import os
 import pygame
+import time
 
 VOICE = "en-HK-YanNeural"
 
 pygame.mixer.init()
+
 
 async def speak_async(text):
     tmp_file = tempfile.mktemp(suffix=".mp3")
@@ -21,6 +23,21 @@ async def speak_async(text):
     except:
         pass
 
+
 def speak(text):
     print(f"FRIDAY: {text}")
-    asyncio.run(speak_async(text))
+    # Retry up to 3 times in case of network hiccup
+    for attempt in range(3):
+        try:
+            asyncio.run(speak_async(text))
+            return  # success
+        except Exception as e:
+            if attempt < 2:
+                print(f"[Speak] Attempt {attempt + 1} failed, retrying... ({e})")
+                time.sleep(1)
+            else:
+                print(f"[Speak] All attempts failed: {e}")
+
+
+if __name__ == "__main__":
+    speak("Hello Hekey! I'm Friday, your personal assistant. How can I help you today?")

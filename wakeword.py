@@ -1,42 +1,45 @@
-import sounddevice as sd
 import numpy as np
 import wave
 import tempfile
 import os
-import threading
-import queue
 
-from listen import whisper_model as model
+from shared import (
+    whisper_model, _audio_queue, SAMPLE_RATE,
+    get_mode, set_mode
+)
+
 print("Wake word ready! Say 'FRIDAY' to wake her up!")
 
-SAMPLE_RATE = 16000
-CHUNK_DURATION = 2  # shorter chunks = less deaf gap
+WAKE_CHUNK_S  = 2       # collect 2 seconds of audio then check for wake word
+SILENCE_THRESH = 10     # skip transcription if too quiet
 
 WAKE_WORDS = [
-    "Friday","friday","hey there","hey friday","wake up friday", "ok friday",
-    "hello there","friday wake up","friday wakeup", "time for work","time for work friday",
-    "alright daddy's home", "let's get to work friday"
+    "friday", "hey friday", "ok friday",
+    "hello friday", "wake up friday", "friday wake up",
 ]
 
-# ── Audio chunk queue ──────────────────────────────────────────────────────
-_audio_queue = queue.Queue()
+
+def _collect_audio(seconds):
+    """Collect N seconds worth of audio chunks from the shared queue."""
+    target_samples = int(SAMPLE_RATE * seconds)
+    collected = []
+    total = 0
+
+    while total < target_samples:
+        chunk = _audio_queue.get()
+        chunk_np = np.frombuffer(chunk, dtype=np.int16).flatten()
+        collected.append(chunk_np)
+        total += len(chunk_np)
+
+    return np.concatenate(collected)
 
 
-def _recording_thread():
-    """Continuously records chunks and pushes them to the queue."""
-    while True:
-        audio = sd.rec(
-            int(CHUNK_DURATION * SAMPLE_RATE),
-            samplerate=SAMPLE_RATE,
-            channels=1,
-            dtype='int16'
-        )
-        sd.wait()
-        _audio_queue.put(audio.copy())
+def _transcribe(audio_data):
+    """Transcribe audio, skip if too quiet."""
+    rms = np.sqrt(np.mean(audio_data.astype(np.float32) ** 2))
+    if rms < SILENCE_THRESH:
+        return ""
 
-
-def _transcribe_chunk(audio_data):
-    """Save chunk to temp wav and transcribe it."""
     tmp = tempfile.mktemp(suffix=".wav")
     with wave.open(tmp, 'wb') as wf:
         wf.setnchannels(1)
@@ -44,37 +47,40 @@ def _transcribe_chunk(audio_data):
         wf.setframerate(SAMPLE_RATE)
         wf.writeframes(audio_data.tobytes())
     try:
-        segments, _ = model.transcribe(
+        segments, _ = whisper_model.transcribe(
             tmp,
             language="en",
             beam_size=1,
             vad_filter=True,
-            no_speech_threshold=0.5
+            no_speech_threshold=0.5,
+            temperature=0.0,
         )
-        text = " ".join([s.text for s in segments]).strip().lower()
-        return text
+        return " ".join([s.text for s in segments]).strip().lower()
     except Exception:
         return ""
     finally:
         try:
             os.remove(tmp)
-        except Exception:
+        except:
             pass
 
 
 def listen_for_wakeword():
     """
-    Starts a background recording thread so Ada is never deaf.
-    The main thread processes chunks from the queue as fast as possible.
-    Returns True as soon as the wake word is detected.
+    Reads from shared audio queue in 2s chunks.
+    Returns True when wake word detected.
     """
-    # Start the recorder in a daemon thread (dies when main program exits)
-    t = threading.Thread(target=_recording_thread, daemon=True)
-    t.start()
+    set_mode("wake")
 
     while True:
-        audio = _audio_queue.get()  # blocks until a chunk is ready
-        text = _transcribe_chunk(audio)
+        # Only process if we're in wake mode
+        if get_mode() != "wake":
+            import time
+            time.sleep(0.1)
+            continue
+
+        audio = _collect_audio(WAKE_CHUNK_S)
+        text = _transcribe(audio)
 
         if text:
             print(f"[Wake] Heard: {text}")
@@ -85,6 +91,9 @@ def listen_for_wakeword():
 
 
 if __name__ == "__main__":
+    from shared import start_audio_stream
+    stream = start_audio_stream()
     print("Listening for 'FRIDAY'...")
     if listen_for_wakeword():
         print("Wake word detected!")
+    stream.stop()
