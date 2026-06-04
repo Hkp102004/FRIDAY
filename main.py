@@ -87,6 +87,8 @@ def handle_command(user_input):
         return complete_task(task)
     elif "clear tasks" in text or "clear my list" in text:
         return clear_tasks()
+    
+
     # --- STEAM GAMES ---
     elif "what games do i have" in text or "my steam games" in text or "list my games" in text:
         return get_steam_games()
@@ -94,16 +96,20 @@ def handle_command(user_input):
         return refresh_library()
     elif "restart steam" in text or "reset steam" in text:
         return restart_steam()
-    elif any(phrase in text for phrase in ["launch", "start game", "run game", "play game"]):
+    elif any(phrase in text for phrase in ["launch", "start game", "open game", "run game", "play game", "open steam game"]):
         game = text
-        for phrase in ["launch", "start game", "run game", "play game",
-                       "on steam", "please", "can you", "for me", "the game"]:
+        for phrase in ["launch", "start game", "open game", "run game", "play game",
+                       "open steam game", "on steam", "please", "can you", "for me", "the game"]:
             game = game.replace(phrase, "")
         game = game.strip()
         if game:
             return launch_game(game)
-    elif "restart steam" in text or "reset steam" in text:
-        return restart_steam()
+    elif "start" in text and "steam" in text:
+        game = text.replace("start", "").replace("on steam", "").replace("steam", "").replace("please", "").replace("can you", "").strip()
+        if game:
+            return launch_game(game)
+
+
 
     # --- APPS ---
     elif "open" in text and any(app in text for app in ["steam","steamtools", "spotify", "discord", "vs code", "vscode", "opera", "brave", "github", "unity", "notepad", "calculator", "explorer", "claude"]):
