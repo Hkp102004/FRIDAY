@@ -65,33 +65,39 @@ def _build_game_library():
 # Build the library once at import time
 _game_library = _build_game_library()
 
-
 def _find_game(query):
-    """
-    Finds the best matching game from the library for a given query.
-    Tries exact match first, then partial match.
-    """
     query = query.lower().strip()
 
     # Exact match
     if query in _game_library:
         return query, _game_library[query]
 
-    # Partial match — query is contained in game name
+    # Word-based scoring — count matching words from query in game name
+    query_words = query.split()
+    scores = []
+    for name, gid in _game_library.items():
+        score = sum(1 for word in query_words if word in name)
+        if score > 0:
+            scores.append((score, -len(name), name, gid))
+
+    if scores:
+        scores.sort(reverse=True)
+        _, _, best_name, best_gid = scores[0]
+        return best_name, best_gid
+
+    # Fallback — substring match
     matches = [(name, gid) for name, gid in _game_library.items() if query in name]
     if matches:
-        # Pick shortest match (closest to what was asked)
         matches.sort(key=lambda x: len(x[0]))
         return matches[0]
 
-    # Partial match — game name is contained in query
+    # Fallback — game name substring in query
     matches = [(name, gid) for name, gid in _game_library.items() if name in query]
     if matches:
         matches.sort(key=lambda x: len(x[0]), reverse=True)
         return matches[0]
 
     return None, None
-
 
 def launch_game(game_name):
     """Launch a Steam game by name."""
