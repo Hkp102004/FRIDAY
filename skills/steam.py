@@ -6,6 +6,16 @@ import time
 STEAM_PATH = r"C:\Program Files (x86)\Steam"
 LIBRARY_VDF = os.path.join(STEAM_PATH, "steamapps", "libraryfolders.vdf")
 
+GAME_ALIASES = {
+    "spider-man remastered": "marvel's spider-man remastered",
+    "spiderman remastered": "marvel's spider-man remastered",
+    "spider man remastered": "marvel's spider-man remastered",
+    "spider-man 2": "marvel's spider-man 2",
+    "spiderman 2": "marvel's spider-man 2",
+    "fs25": "farming simulator 25",
+    "forza": "forza horizon 6",
+}
+
 def _get_library_paths():
     """
     Reads libraryfolders.vdf to find all Steam library locations
@@ -66,7 +76,12 @@ def _build_game_library():
 _game_library = _build_game_library()
 
 def _find_game(query):
-    query = query.lower().strip()
+    query = query.lower().strip().rstrip(".,!?")  #cleanup
+    print(f"[Steam] _find_game called with: '{query}'")
+
+    if query in GAME_ALIASES:
+        query = GAME_ALIASES[query]
+        print(f"[Steam] Alias found. Transformed query to: '{query}'")
 
     # Exact match
     if query in _game_library:

@@ -101,14 +101,16 @@ def handle_command(user_input):
         for phrase in ["launch", "start game", "open game", "run game", "play game",
                        "open steam game", "on steam", "please", "can you", "for me", "the game"]:
             game = game.replace(phrase, "")
-        game = game.strip()
+        game = game.strip().rstrip(".,!?") #cleanup
+        print(f"[Steam Debug] Query after stripping: '{game}'") #debug line
         if game:
             return launch_game(game)
     elif "start" in text and "steam" in text:
         game = text.replace("start", "").replace("on steam", "").replace("steam", "").replace("please", "").replace("can you", "").strip()
+        print(f"[Steam Debug] Query after stripping: '{game}'") #debug line
         if game:
             return launch_game(game)
-
+        
 
 
     # --- APPS ---
