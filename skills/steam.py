@@ -2,35 +2,25 @@ import os
 import re
 import subprocess
 import time
+from rapidfuzz import process, fuzz
 
 STEAM_PATH = r"C:\Program Files (x86)\Steam"
 LIBRARY_VDF = os.path.join(STEAM_PATH, "steamapps", "libraryfolders.vdf")
 
-GAME_ALIASES = {
-    "spider-man remastered": "marvel's spider-man remastered",
-    "spiderman remastered": "marvel's spider-man remastered",
-    "spider man remastered": "marvel's spider-man remastered",
-    "spider-man 2": "marvel's spider-man 2",
-    "spiderman 2": "marvel's spider-man 2",
-    "fs25": "farming simulator 25",
-    "forza": "forza horizon 6",
-}
+def _normalize(text):
+    """Normalize text — lowercase, straight apostrophes, strip punctuation."""
+    text = text.lower().strip()
+    text = text.replace("\u2019", "'").replace("\u2018", "'")
+    text = text.rstrip(".,!?")
+    return text
 
 def _get_library_paths():
-    """
-    Reads libraryfolders.vdf to find all Steam library locations
-    across all drives automatically.
-    """
-    paths = [os.path.join(STEAM_PATH, "steamapps")]  # default library
-
+    paths = [os.path.join(STEAM_PATH, "steamapps")]
     if not os.path.exists(LIBRARY_VDF):
         return paths
-
     try:
         with open(LIBRARY_VDF, "r", encoding="utf-8") as f:
             content = f.read()
-
-        # Extract all "path" values from the vdf file
         matches = re.findall(r'"path"\s+"([^"]+)"', content)
         for path in matches:
             steamapps = os.path.join(path, "steamapps")
@@ -38,18 +28,11 @@ def _get_library_paths():
                 paths.append(steamapps)
     except Exception as e:
         print(f"[Steam] Error reading library paths: {e}")
-
     return paths
 
-
 def _build_game_library():
-    """
-    Scans all Steam library folders and builds a dict of
-    game_name (lowercase) -> app_id.
-    """
     games = {}
     library_paths = _get_library_paths()
-
     for library in library_paths:
         if not os.path.exists(library):
             continue
@@ -60,108 +43,73 @@ def _build_game_library():
             try:
                 with open(acf_path, "r", encoding="utf-8") as f:
                     content = f.read()
-                # Extract app id and name
                 app_id = re.search(r'"appid"\s+"(\d+)"', content)
                 name = re.search(r'"name"\s+"([^"]+)"', content)
                 if app_id and name:
-                    games[name.group(1).lower()] = app_id.group(1)
+                    # Normalize name — straight apostrophes, lowercase
+                    normalized = _normalize(name.group(1))
+                    games[normalized] = app_id.group(1)
             except Exception:
                 continue
-
     print(f"[Steam] Found {len(games)} games in library")
     return games
 
-
-# Build the library once at import time
 _game_library = _build_game_library()
 
 def _find_game(query):
-    query = query.lower().strip().rstrip(".,!?")  #cleanup
-    print(f"[Steam] _find_game called with: '{query}'")
+    """Find best matching game using rapidfuzz fuzzy matching."""
+    query = _normalize(query)
+    print(f"[Steam] Searching for: '{query}'")
 
-    if query in GAME_ALIASES:
-        query = GAME_ALIASES[query]
-        print(f"[Steam] Alias found. Transformed query to: '{query}'")
+    if not _game_library:
+        return None, None
 
-    # Exact match
-    if query in _game_library:
-        return query, _game_library[query]
+    # Use rapidfuzz to find best match
+    result = process.extractOne(
+        query,
+        _game_library.keys(),
+        scorer=fuzz.token_sort_ratio,  # handles word order differences
+        score_cutoff=50  # minimum 50% match — below this = no match
+    )
 
-    # Word-based scoring — count matching words from query in game name
-    query_words = query.split()
-    scores = []
-    for name, gid in _game_library.items():
-        score = sum(1 for word in query_words if word in name)
-        if score > 0:
-            scores.append((score, -len(name), name, gid))
-
-    if scores:
-        scores.sort(reverse=True)
-        _, _, best_name, best_gid = scores[0]
-        return best_name, best_gid
-
-    # Fallback — substring match
-    matches = [(name, gid) for name, gid in _game_library.items() if query in name]
-    if matches:
-        matches.sort(key=lambda x: len(x[0]))
-        return matches[0]
-
-    # Fallback — game name substring in query
-    matches = [(name, gid) for name, gid in _game_library.items() if name in query]
-    if matches:
-        matches.sort(key=lambda x: len(x[0]), reverse=True)
-        return matches[0]
+    if result:
+        name, score, _ = result
+        print(f"[Steam] Best match: '{name}' (score: {score})")
+        return name, _game_library[name]
 
     return None, None
 
 def launch_game(game_name):
-    """Launch a Steam game by name."""
     try:
         name, app_id = _find_game(game_name)
-
         if not app_id:
-            # Give a helpful hint if no match found
-            suggestions = [n for n in _game_library.keys() if any(word in n for word in game_name.lower().split())]
-            if suggestions:
-                return f"Couldn't find {game_name}. Did you mean: {', '.join(suggestions[:3])}?"
             return f"Couldn't find {game_name} in your Steam library!"
-
         subprocess.Popen(f"start steam://rungameid/{app_id}", shell=True)
-        # Capitalize game name nicely for response
-        display_name = name.title()
-        return f"Launching {display_name}!"
-
+        return f"Launching {name.title()}!"
     except Exception as e:
         return f"Couldn't launch {game_name}: {str(e)}"
 
-
 def get_steam_games():
-    """Returns a list of all installed Steam games."""
     if not _game_library:
         return "No Steam games found!"
     names = sorted([name.title() for name in _game_library.keys()])
     return "Your Steam games: " + ", ".join(names)
 
-
 def refresh_library():
-    """Refreshes the game library cache — call this after installing new games."""
     global _game_library
     _game_library = _build_game_library()
     return f"Library refreshed! Found {len(_game_library)} games."
 
+def restart_steam():
+    try:
+        subprocess.run(["taskkill", "/f", "/im", "steam.exe"], capture_output=True)
+        time.sleep(3)
+        subprocess.Popen(r"C:\Program Files (x86)\Steam\steam.exe")
+        return "Restarting Steam!"
+    except Exception as e:
+        return f"Couldn't restart Steam: {str(e)}"
 
 if __name__ == "__main__":
     print("Steam games found:")
     for name, gid in sorted(_game_library.items()):
         print(f"  {name.title()} (ID: {gid})")
-
-
-# added a restart function for steam
-def restart_steam():
-    try:
-        subprocess.run(["taskkill", "/f", "/im", "steam.exe"], capture_output=True)
-        time.sleep(3) #waiting for steam to close
-        subprocess.Popen(r"C:\Program Files (x86)\Steam\steam.exe")
-        return "Restarting steam right now"
-    except Exception as e:
-        return f"Couldn't restart steam: {str(e)}"
