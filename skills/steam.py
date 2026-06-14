@@ -74,7 +74,7 @@ def _find_game(query):
 
     if result:
         name, score, _ = result
-        print(f"[Steam] Best match: '{name}' (score: {score})")
+        print(f"[Steam] Best match: '{name}' (score: {score})") ##tis is finally working and it is using fuzzy matching to find the best match and launch the game.
         return name, _game_library[name]
 
     return None, None
